@@ -1,4 +1,11 @@
-# SevaHub
+# SevaHub 
+Team Leader: Ankit Bhandari
+Team Members: 
+1.Vaibhav pant
+2.Vineet juyal
+3.Nishant Rajput
+
+
 an online platform for multiple services 
 ### Problem Statement
  * In today's fast-paced world, people often struggle to find reliable and efficient services for their daily needs. Whether it's finding a trustworthy plumber, a skilled tutor, or a reliable delivery service, the process can be time-consuming and frustrating.
