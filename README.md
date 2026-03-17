@@ -1,9 +1,7 @@
 # SevaHub 
 Team Leader: Ankit Bhandari
-Team Members: 
-1.Vaibhav pant
-2.Vineet juyal
-3.Nishant Rajput
+<br>
+Team Members: Vaibhav pant, Vineet juyal, Nishant Rajput
 
 
 an online platform for multiple services 
