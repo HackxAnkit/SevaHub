@@ -4,7 +4,7 @@ Team Leader: Ankit Bhandari
 Team Members: Vaibhav pant, Vineet juyal, Nishant Rajput
 
 
-an online platform for multiple services 
+## An online platform for multiple services 
 ### Problem Statement
  * In today's fast-paced world, people often struggle to find reliable and efficient services for their daily needs. Whether it's finding a trustworthy plumber, a skilled tutor, or a reliable delivery service, the process can be time-consuming and frustrating.
 
