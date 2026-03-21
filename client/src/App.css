@@ -313,6 +313,78 @@
   animation: rise-in 600ms ease both;
 }
 
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-line,
+.skeleton-chip,
+.skeleton-button {
+  position: relative;
+  overflow: hidden;
+  background: rgba(26, 70, 70, 0.08);
+}
+
+.skeleton-line::after,
+.skeleton-chip::after,
+.skeleton-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.48) 45%,
+    rgba(255, 255, 255, 0.72) 50%,
+    rgba(255, 255, 255, 0.48) 55%,
+    transparent 100%
+  );
+  animation: shimmer 1200ms ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 8px;
+}
+
+.skeleton-title {
+  width: 68%;
+  height: 24px;
+}
+
+.skeleton-subtitle {
+  width: 44%;
+}
+
+.skeleton-chips {
+  display: flex;
+  gap: 10px;
+}
+
+.skeleton-chip {
+  width: 86px;
+  height: 30px;
+  border-radius: 999px;
+}
+
+.skeleton-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.skeleton-price {
+  width: 120px;
+}
+
+.skeleton-button {
+  width: 140px;
+  height: 48px;
+  border-radius: 999px;
+}
+
 .service-card-top,
 .service-footer,
 .service-rating {
@@ -473,6 +545,12 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
   }
 }
 
