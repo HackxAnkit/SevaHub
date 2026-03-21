@@ -1,10 +1,13 @@
 {
   "name": "sevahub",
   "version": "1.0.0",
-  "description": "",
+  "description": "SevaHub full-stack service marketplace demo",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\""
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix server",
+    "lint": "npm run lint --prefix client"
   },
   "keywords": [],
   "author": "",

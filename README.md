@@ -1,24 +1,64 @@
-# SevaHub 
-Team Leader: Ankit Bhandari
-<br>
-Team Members: Vaibhav pant, Vineet juyal, Nishant Rajput
+# SevaHub
 
+SevaHub is now a working full-stack service marketplace demo with a React frontend and an Express backend.
 
-## An online platform for multiple services 
-### Problem Statement
- * In today's fast-paced world, people often struggle to find reliable and efficient services for their daily needs. Whether it's finding a trustworthy plumber, a skilled tutor, or a reliable delivery service, the process can be time-consuming and frustrating.
+## What is included
 
-### Solution
- * SevaHub aims to address this problem by providing a comprehensive online platform that connects service providers with customers in a seamless and efficient manner. The platform will offer a wide range of services, including home repairs, tutoring, delivery services, and more.
+- Searchable service catalogue across home repair, tutoring, delivery, wellness, and business support
+- Live backend API for categories, dashboard data, service filters, and customer requests
+- Request intake flow that stores submissions locally in `server/data/requests.json`
+- Optional MongoDB connectivity check so the app still runs even without a database
+- Production serving from the backend once the frontend is built
 
-### Features
-1. **User-Friendly Interface**: SevaHub will have an intuitive and user-friendly interface
-2. **Service Categories**: The platform will categorize services for easy navigation, allowing users to quickly find the services they need.
-3. **Verified Service Providers**: SevaHub will implement a verification process to ensure that
-service providers are trustworthy and reliable, giving customers peace of mind when hiring services.
-4. **Customer Reviews and Ratings**: Users will be able to leave reviews and ratings for service providers, helping others make informed decisions when choosing services.
-5. **Secure Payment System**: SevaHub will integrate a secure payment system to facilitate transactions between customers and service providers, ensuring a safe and convenient payment process.
-6. **Real-Time Tracking**: For services like delivery, SevaHub will offer real-time tracking, allowing customers to monitor the status of their orders and deliveries.
+## Run locally
 
-### System Architecture
-![SevaHub Logo](Images/DFD.png)
+### 1. Install dependencies
+
+```bash
+npm install
+npm install --prefix client
+npm install --prefix server
+```
+
+### 2. Configure environment variables
+
+Copy the example env files if you want to customize ports or API URLs.
+
+```bash
+cp server/.env.example server/.env
+cp client/.env.example client/.env
+```
+
+### 3. Start development mode
+
+```bash
+npm run dev
+```
+
+- Frontend: `http://127.0.0.1:5173`
+- Backend: `http://127.0.0.1:5000`
+
+### 4. Build and run production mode
+
+```bash
+npm run build
+npm run start
+```
+
+After the build, the Express server will serve the frontend from `client/dist`.
+
+## Main API routes
+
+- `GET /api/dashboard`
+- `GET /api/categories`
+- `GET /api/services`
+- `GET /api/services/:serviceId`
+- `GET /api/requests`
+- `POST /api/requests`
+- `GET /api/health`
+
+## Notes
+
+- MongoDB is optional. If `MONGO_URI` is not set or MongoDB is unavailable, SevaHub still works using local JSON storage.
+- Incoming requests are saved to `server/data/requests.json`.
+- `npm run build` builds the frontend only. `npm run start` launches the backend and serves the built frontend if available.
