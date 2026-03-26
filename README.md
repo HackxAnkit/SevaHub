@@ -62,3 +62,5 @@ After the build, the Express server will serve the frontend from `client/dist`.
 - MongoDB is optional. If `MONGO_URI` is not set or MongoDB is unavailable, SevaHub still works using local JSON storage.
 - Incoming requests are saved to `server/data/requests.json`.
 - `npm run build` builds the frontend only. `npm run start` launches the backend and serves the built frontend if available.
+
+made by sevahub
