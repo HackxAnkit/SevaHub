@@ -9,6 +9,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '.env') })
 
 const app = express()
 const services = require('./data/services.json')
+const Request = require('./models/Request')
 
 const host = process.env.HOST || '127.0.0.1'
 const port = Number(process.env.PORT) || 5000
@@ -58,6 +59,10 @@ app.use(cors({
 }))
 app.use(express.json())
 
+function isMongoConnected() {
+  return mongoose.connection.readyState === 1
+}
+
 function getMongoStatus() {
   switch (mongoose.connection.readyState) {
     case 1:
@@ -69,6 +74,10 @@ function getMongoStatus() {
     default:
       return process.env.MONGO_URI ? 'unavailable' : 'not-configured'
   }
+}
+
+function getActiveStorage() {
+  return isMongoConnected() ? 'mongodb' : 'local-json'
 }
 
 async function connectToDatabase() {
@@ -95,15 +104,106 @@ async function ensureRequestsFile() {
   }
 }
 
-async function readRequests() {
+async function readRequestsFromFile() {
   await ensureRequestsFile()
   const raw = await fs.readFile(requestsFilePath, 'utf8')
   return JSON.parse(raw || '[]')
 }
 
-async function writeRequests(requests) {
+async function writeRequestsToFile(requests) {
   await ensureRequestsFile()
   await fs.writeFile(requestsFilePath, `${JSON.stringify(requests, null, 2)}\n`)
+}
+
+function toRequestResponse(request) {
+  const createdAt = request.createdAt instanceof Date
+    ? request.createdAt.toISOString()
+    : request.createdAt
+
+  return {
+    id: request.requestId || request.id,
+    createdAt,
+    status: request.status,
+    name: request.name,
+    email: request.email,
+    phone: request.phone,
+    location: request.location,
+    message: request.message,
+    preferredDate: request.preferredDate,
+    budget: request.budget,
+    serviceId: request.serviceId,
+    serviceTitle: request.serviceTitle,
+    serviceCategory: request.serviceCategory,
+  }
+}
+
+async function getRequestCount() {
+  if (isMongoConnected()) {
+    return Request.countDocuments()
+  }
+
+  const requests = await readRequestsFromFile()
+  return requests.length
+}
+
+async function getRecentRequests(limit = 10) {
+  if (isMongoConnected()) {
+    const requests = await Request.find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean()
+
+    return requests.map(toRequestResponse)
+  }
+
+  const requests = await readRequestsFromFile()
+  return requests.slice(-limit).reverse().map(toRequestResponse)
+}
+
+async function createRequestRecord(payload, selectedService) {
+  const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const createdAt = new Date()
+  const baseRecord = {
+    requestId,
+    createdAt,
+    status: 'new',
+    name: payload.name,
+    email: payload.email,
+    phone: payload.phone,
+    location: payload.location,
+    message: payload.message,
+    preferredDate: payload.preferredDate,
+    budget: payload.budget,
+    serviceId: selectedService?.id || null,
+    serviceTitle: selectedService?.title || null,
+    serviceCategory: selectedService?.category || payload.serviceCategory,
+  }
+
+  if (isMongoConnected()) {
+    const request = await Request.create(baseRecord)
+    return toRequestResponse(request.toObject())
+  }
+
+  const requests = await readRequestsFromFile()
+  const fileRecord = {
+    id: requestId,
+    createdAt: createdAt.toISOString(),
+    status: baseRecord.status,
+    name: baseRecord.name,
+    email: baseRecord.email,
+    phone: baseRecord.phone,
+    location: baseRecord.location,
+    message: baseRecord.message,
+    preferredDate: baseRecord.preferredDate,
+    budget: baseRecord.budget,
+    serviceId: baseRecord.serviceId,
+    serviceTitle: baseRecord.serviceTitle,
+    serviceCategory: baseRecord.serviceCategory,
+  }
+
+  requests.push(fileRecord)
+  await writeRequestsToFile(requests)
+  return toRequestResponse(fileRecord)
 }
 
 function toServiceResponse(service) {
@@ -169,6 +269,9 @@ function buildStats(requestCount) {
   const totalRating = services.reduce((sum, service) => sum + service.rating, 0)
   const uniqueCities = new Set(services.map((service) => service.city))
   const sameDaySlots = services.filter((service) => service.availability === 'Same day').length
+  const storageDetail = isMongoConnected()
+    ? 'Stored in MongoDB as requests are submitted'
+    : 'Stored locally while MongoDB is unavailable'
 
   return [
     {
@@ -189,7 +292,7 @@ function buildStats(requestCount) {
     {
       label: 'Requests captured',
       value: String(requestCount),
-      detail: 'Stored locally even when Mongo is unavailable',
+      detail: storageDetail,
     },
     {
       label: 'Same-day options',
@@ -204,7 +307,7 @@ function buildHealthPayload() {
     status: 'ok',
     api: 'available',
     mongo: getMongoStatus(),
-    storage: 'local-json',
+    storage: getActiveStorage(),
     frontendBuilt: existsSync(clientIndexPath),
   }
 }
@@ -212,6 +315,9 @@ function buildHealthPayload() {
 function buildDashboard(requestCount) {
   const categories = buildCategories()
   const catalogue = services.map(toServiceResponse)
+  const requestStorage = isMongoConnected()
+    ? 'New requests are written to MongoDB immediately.'
+    : 'Requests fall back to a local JSON file until MongoDB is available.'
 
   return {
     hero: {
@@ -226,8 +332,8 @@ function buildDashboard(requestCount) {
     stats: buildStats(requestCount),
     trustPoints: [
       'Provider cards highlight ratings, response windows, and pricing upfront.',
-      'The backend stores requests in a local JSON file so the app works immediately.',
-      'MongoDB remains optional and is reported in the live platform health card.',
+      requestStorage,
+      'The live health card shows whether requests are using MongoDB or local fallback storage.',
     ],
     status: buildHealthPayload(),
   }
@@ -320,8 +426,8 @@ app.get('/api/services/:serviceId', (req, res) => {
 
 app.get('/api/dashboard', async (req, res, next) => {
   try {
-    const requests = await readRequests()
-    res.json(buildDashboard(requests.length))
+    const requestCount = await getRequestCount()
+    res.json(buildDashboard(requestCount))
   } catch (error) {
     next(error)
   }
@@ -329,11 +435,14 @@ app.get('/api/dashboard', async (req, res, next) => {
 
 app.get('/api/requests', async (req, res, next) => {
   try {
-    const requests = await readRequests()
+    const [total, items] = await Promise.all([
+      getRequestCount(),
+      getRecentRequests(),
+    ])
 
     res.json({
-      total: requests.length,
-      items: requests.slice(-10).reverse(),
+      total,
+      items,
     })
   } catch (error) {
     next(error)
@@ -364,25 +473,7 @@ app.post('/api/requests', async (req, res, next) => {
       return
     }
 
-    const requests = await readRequests()
-    const requestRecord = {
-      id: `req-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      status: 'new',
-      name: payload.name,
-      email: payload.email,
-      phone: payload.phone,
-      location: payload.location,
-      message: payload.message,
-      preferredDate: payload.preferredDate,
-      budget: payload.budget,
-      serviceId: selectedService?.id || null,
-      serviceTitle: selectedService?.title || null,
-      serviceCategory: selectedService?.category || payload.serviceCategory,
-    }
-
-    requests.push(requestRecord)
-    await writeRequests(requests)
+    const requestRecord = await createRequestRecord(payload, selectedService)
 
     res.status(201).json({
       message: 'Your request has been saved. A provider can now follow up.',

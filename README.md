@@ -6,8 +6,8 @@ SevaHub is now a working full-stack service marketplace demo with a React fronte
 
 - Searchable service catalogue across home repair, tutoring, delivery, wellness, and business support
 - Live backend API for categories, dashboard data, service filters, and customer requests
-- Request intake flow that stores submissions locally in `server/data/requests.json`
-- Optional MongoDB connectivity check so the app still runs even without a database
+- Request intake flow that stores submissions in MongoDB when `MONGO_URI` is configured
+- Local JSON fallback in `server/data/requests.json` if MongoDB is unavailable
 - Production serving from the backend once the frontend is built
 
 ## Run locally
@@ -59,8 +59,8 @@ After the build, the Express server will serve the frontend from `client/dist`.
 
 ## Notes
 
-- MongoDB is optional. If `MONGO_URI` is not set or MongoDB is unavailable, SevaHub still works using local JSON storage.
-- Incoming requests are saved to `server/data/requests.json`.
+- Incoming requests are saved to MongoDB when the server connects successfully with `MONGO_URI`.
+- If MongoDB is not configured or unavailable, requests fall back to `server/data/requests.json`.
 - `npm run build` builds the frontend only. `npm run start` launches the backend and serves the built frontend if available.
 
 made by sevahub
