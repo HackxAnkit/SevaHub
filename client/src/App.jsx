@@ -31,6 +31,19 @@ function buildQuery(category, search) {
   return queryString ? `/api/services?${queryString}` : '/api/services'
 }
 
+function mergeServices(...serviceGroups) {
+  const seen = new Set()
+
+  return serviceGroups.flat().filter((service) => {
+    if (!service?.id || seen.has(service.id)) {
+      return false
+    }
+
+    seen.add(service.id)
+    return true
+  })
+}
+
 function App() {
   const [dashboard, setDashboard] = useState(null)
   const [services, setServices] = useState([])
@@ -124,12 +137,22 @@ function App() {
     }
   }, [selectedCategory, deferredSearch])
 
-  const selectedService = dashboard?.catalog?.find((service) => service.id === form.serviceId) || null
+  const catalogServices = dashboard?.catalog || []
+  const serviceOptions = services.length > 0 || selectedCategory !== 'all' || deferredSearch.trim()
+    ? services
+    : mergeServices(services, catalogServices)
+  const selectedService = mergeServices(services, catalogServices)
+    .find((service) => service.id === form.serviceId) || null
 
   function handleChooseService(serviceId) {
     setForm((current) => ({
       ...current,
       serviceId,
+    }))
+    setFieldErrors((current) => ({
+      ...current,
+      service: '',
+      serviceCategory: '',
     }))
     setSubmitState({
       status: 'idle',
@@ -223,11 +246,11 @@ function App() {
 
       <RequestPanel
         selectedService={selectedService}
+        serviceOptions={serviceOptions}
         handleSubmit={handleSubmit}
         form={form}
         handleInputChange={handleInputChange}
         fieldErrors={fieldErrors}
-        dashboard={dashboard}
         submitState={submitState}
       />
     </div>

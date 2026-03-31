@@ -2,11 +2,11 @@ import { formatPrice } from '../utils/formatters'
 
 function RequestPanel({
   selectedService,
+  serviceOptions,
   handleSubmit,
   form,
   handleInputChange,
   fieldErrors,
-  dashboard,
   submitState,
 }) {
   return (
@@ -98,7 +98,7 @@ function RequestPanel({
           <span>Choose a listed service</span>
           <select name="serviceId" value={form.serviceId} onChange={handleInputChange}>
             <option value="">Use selected category instead</option>
-            {(dashboard?.catalog || []).map((service) => (
+            {serviceOptions.map((service) => (
               <option key={service.id} value={service.id}>
                 {service.title} - {service.city}
               </option>
